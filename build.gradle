@@ -16,6 +16,10 @@ idea {
 	}
 }
 
+ext {
+	loadingPlugin = 'me.theandrey.mods.sidefix.LoadingPlugin'
+}
+
 minecraft {
 	mappings channel: 'stable', version: '39-1.12'
 
@@ -25,6 +29,7 @@ minecraft {
 			workingDirectory project.file('run')
 			property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP' // Recommended logging data for a userdev environment
 			property 'forge.logging.console.level', 'debug' // Recommended logging level for the console
+			property 'fml.coreMods.load', project.loadingPlugin
 		}
 
 		client {
@@ -46,7 +51,7 @@ tasks.withType(JavaCompile).configureEach {
 
 jar {
 	manifest {
-		attributes 'FMLCorePlugin': 'LoadingPlugin'
+		attributes 'FMLCorePlugin': project.loadingPlugin
 		attributes 'FMLCorePluginContainsFMLMod': 'false'
 	}
 }
