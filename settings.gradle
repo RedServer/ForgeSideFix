@@ -1,0 +1,11 @@
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+		maven {
+			name = 'forge'
+			url = getProperty('net.minecraftforge.repository.url')
+		}
+	}
+}
+
+rootProject.name = 'ForgeSideFix'

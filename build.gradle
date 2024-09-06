@@ -1,0 +1,61 @@
+plugins {
+	id 'java-library'
+	id 'net.minecraftforge.gradle' version '6.0.+'
+	id 'idea'
+}
+
+java {
+	toolchain.languageVersion = JavaLanguageVersion.of(8)
+	sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+idea {
+	module {
+		inheritOutputDirs = true
+		excludeDirs += file('./run')
+	}
+}
+
+minecraft {
+	mappings channel: 'stable', version: '39-1.12'
+
+	// Default run configurations.
+	runs {
+		configureEach {
+			workingDirectory project.file('run')
+			property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP' // Recommended logging data for a userdev environment
+			property 'forge.logging.console.level', 'debug' // Recommended logging level for the console
+		}
+
+		client {
+		}
+
+		server {
+			args '--nogui'
+		}
+	}
+}
+
+dependencies {
+	minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
+
+jar {
+	manifest {
+		attributes 'FMLCorePlugin': 'LoadingPlugin'
+		attributes 'FMLCorePluginContainsFMLMod': 'false'
+	}
+}
+
+tasks.register('sourcesJar', Jar) {
+	archiveClassifier.set('sources')
+	from sourceSets.main.java
+}
+
+artifacts {
+	archives tasks.named('sourcesJar')
+}
