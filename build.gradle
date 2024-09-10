@@ -2,6 +2,7 @@ plugins {
 	id 'java-library'
 	id 'net.minecraftforge.gradle' version '6.0.+'
 	id 'idea'
+	id 'maven-publish'
 }
 
 java {
@@ -12,12 +13,18 @@ java {
 idea {
 	module {
 		inheritOutputDirs = true
-		excludeDirs += file('./run')
+		excludeDirs += file('run')
 	}
 }
 
 ext {
 	loadingPlugin = 'me.theandrey.mods.sidefix.LoadingPlugin'
+}
+
+legacy {
+	fixClasspath = true
+	extractMappings = true
+	attachMappings = true
 }
 
 minecraft {
@@ -27,6 +34,7 @@ minecraft {
 	runs {
 		configureEach {
 			workingDirectory project.file('run')
+			environment 'MC_VERSION', '1.12.2'
 			property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP' // Recommended logging data for a userdev environment
 			property 'forge.logging.console.level', 'debug' // Recommended logging level for the console
 			property 'fml.coreMods.load', project.loadingPlugin
@@ -41,8 +49,39 @@ minecraft {
 	}
 }
 
+repositories {
+	maven {
+		name "Su5ed LegacyDev Fork"
+		url "https://maven.su5ed.dev/releases"
+	}
+}
+
 dependencies {
 	minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+
+	constraints {
+		implementation('net.minecraftforge:legacydev:0.3.0.0-legacyExt') {
+			because 'needed to have all ATs work properly'
+		}
+
+		implementation('org.ow2.asm:asm-debug-all:5.2') {
+			because 'newer ASM versions include module info that causes errors in Java 8'
+		}
+	}
+
+	configurations.forEach {
+		// mergetool pollutes the classpath with conflicting classes
+		it.exclude(group: 'net.minecraftforge', module: 'mergetool')
+
+		// legacydev forge dep wants fatjar as the classifier, but 3.0 lacks it
+		it.resolutionStrategy.eachDependency {
+			if (it.requested.module.toString() == "net.minecraftforge:legacydev") {
+				it.artifactSelection {
+					it.selectArtifact(DependencyArtifact.DEFAULT_TYPE, null, null)
+				}
+			}
+		}
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -63,4 +102,17 @@ tasks.register('sourcesJar', Jar) {
 
 artifacts {
 	archives tasks.named('sourcesJar')
+}
+
+tasks.withType(GenerateModuleMetadata).configureEach {
+	enabled = false
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifact tasks.named('jar')
+			artifact tasks.named('sourcesJar')
+		}
+	}
 }
